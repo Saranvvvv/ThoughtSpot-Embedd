@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ThoughtSpot Embed Demo</title>
+
+  <!-- ThoughtSpot SDK from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@thoughtspot/visual-embed-sdk/dist/tsembed.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    #loader {
+      font-weight: bold;
+      color: #333;
+      display: none;
+    }
+    #errorBanner {
+      display: none;
+      background: #f8d7da;
+      padding: 10px;
+      color: #721c24;
+      margin-bottom: 10px;
+    }
+    #your-own-div {
+      margin-top: 20px;
+      height: 600px;
+      width: 100%;
+      border: 1px solid #ccc;
+    }
+    #errorBanner button {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loader -->
+  <div id="loader">Loading...</div>
+
+  <!-- Error banner -->
+  <div id="errorBanner">
+    <span></span>
+    <button id="errorBannerCloseBtn">X</button>
+  </div>
+
+  <!-- Div where ThoughtSpot embed will render -->
+  <div id="your-own-div"></div>
+
+  <!-- Your JS code -->
+  <script>
+    const { init, SearchEmbed, EmbedEvent, AuthType } = window.tsembed;
+
+    // Init SDK with public access
+    init({
+      thoughtSpotHost: "https://try-everywhere.thoughtspot.cloud",
+      authType: AuthType.None,   // ✅ Public worksheet
+    });
+
+    // Instantiate SearchEmbed
+    const embed = new SearchEmbed("#your-own-div", {
+      frameParams: {},
+      answerId: "ef625725-b6fa-4ce4-9522-d942499a1690a", // Replace with your public Answer/Worksheet ID
+    });
+
+    // Register event handlers
+    embed
+      .on(EmbedEvent.Init, showLoader)
+      .on(EmbedEvent.Load, hideLoader)
+      .on("answerPageLoading", payload =>
+        console.log("Message received:", JSON.stringify(payload))
+      )
+      .on(EmbedEvent.Error, (error) => {
+        showErrorBanner('flex', error.error || error.data || "Unknown error");
+        console.error('Error from embed:', error);
+        hideLoader();
+      })
+      .render();
+
+    // Utility functions
+    function setDisplayStyle(el, style) {
+      const elem = document.getElementById(el);
+      if (elem) elem.style.display = style;
+    }
+
+    function showErrorBanner(display, errorText) {
+      setDisplayStyle("errorBanner", display);
+      if (errorText) {
+        document.getElementById("errorBanner").firstElementChild.innerText = errorText;
+      }
+    }
+
+    function showLoader() {
+      setDisplayStyle("loader", "block");
+    }
+    function hideLoader() {
+      setDisplayStyle("loader", "none");
+    }
+
+    // Close button listener
+    document.getElementById('errorBannerCloseBtn').addEventListener('click', () => {
+      setDisplayStyle("errorBanner", "none");
+    });
+  </script>
+</body>
+</html>
