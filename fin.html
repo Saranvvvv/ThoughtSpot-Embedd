@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ThoughtSpot Embed Test</title>
+  <style>
+    #loader {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      font-weight: bold;
+    }
+    #errorBanner {
+      display: none;
+      background-color: #f44336;
+      color: white;
+      padding: 10px;
+      position: relative;
+    }
+    #errorBanner button {
+      position: absolute;
+      right: 10px;
+      top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="your-own-div"></div>
+  <div id="loader">Loading...</div>
+  <div id="errorBanner">
+    <span></span>
+    <button id="errorBannerCloseBtn">Close</button>
+  </div>
+
+  <!-- Load ThoughtSpot SDK from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@thoughtspot/visual-embed-sdk/dist/tsembed.js"></script>
+  <script>
+    // Initialize SDK with No Auth
+    window.tsembed.init({
+      thoughtSpotHost: "https://try-everywhere.thoughtspot.cloud",
+      authType: window.tsembed.AuthType.None
+    });
+
+    // Embed the Answer
+    const embed = new window.tsembed.SearchEmbed("#your-own-div", {
+      answerId: "ef625725-b6fa-4ce4-9522-d942499a1690",
+      frameParams: {
+        width: "100%",
+        height: "600px"
+      }
+    });
+
+    embed
+      .on(window.tsembed.EmbedEvent.Init, showLoader)
+      .on(window.tsembed.EmbedEvent.Load, hideLoader)
+      .on("answerPageLoading", payload =>
+        console.log("message received from embedded view", JSON.stringify(payload))
+      )
+      .on(window.tsembed.EmbedEvent.Error, (error) => {
+        if (error?.data?.errorType === 'FULLSCREEN' || error?.data?.errorType === 'API') {
+          showErrorBanner('none');
+        } else if (typeof(error.error) === 'string' || typeof(error.data) === 'string') {
+          showErrorBanner('flex', error.error || error.data);
+        } else {
+          showErrorBanner('flex');
+        }
+        console.log('Error:', error);
+        hideLoader();
+      })
+      .render(); 
+
+    // Utility functions
+    function setDisplayStyle(e1, style) {
+      const element = document.getElementById(e1);
+      if (element) {
+        element.style.display = style;
+      }
+    }
+
+    function showErrorBanner(display, errorText) {
+      setDisplayStyle("errorBanner", display);
+      if (errorText) {
+        document.getElementById("errorBanner").firstElementChild.innerText = errorText;
+      }
+    }
+
+    function showLoader() {
+      setDisplayStyle("loader", "block");
+    }
+
+    function hideLoader() {
+      setDisplayStyle("loader", "none");
+    }
+
+    document.getElementById('errorBannerCloseBtn').addEventListener('click', () => {
+      setDisplayStyle("errorBanner", "none");
+    });
+  </script>
+</body>
+</html>
